@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f6f3ed">
+    <title>DWS AP Tracker</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #242423;
+        background: #f6f3ed;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-width: 320px;
+        min-height: 100vh;
+        margin: 0;
+        padding: 48px 20px;
+      }
+
+      main {
+        width: min(100%, 720px);
+        margin: 0 auto;
+      }
+
+      .eyebrow {
+        margin: 0 0 12px;
+        color: #786a50;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(2.5rem, 8vw, 4rem);
+        font-weight: 500;
+        letter-spacing: -0.055em;
+        line-height: 1;
+      }
+
+      .intro {
+        max-width: 540px;
+        margin: 18px 0 32px;
+        color: #66635c;
+        font-size: 1rem;
+        line-height: 1.65;
+      }
+
+      .tracker {
+        overflow: hidden;
+        border: 1px solid #e7e2d8;
+        border-radius: 18px;
+        background: #fffefa;
+        box-shadow: 0 18px 48px rgb(41 35 24 / 7%);
+      }
+
+      .tracker-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 22px 24px;
+        border-bottom: 1px solid #eeeae2;
+      }
+
+      .tracker-header h2 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 650;
+      }
+
+      #progress {
+        color: #786a50;
+        font-size: 0.875rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      form {
+        display: flex;
+        gap: 10px;
+        padding: 20px 24px;
+        border-bottom: 1px solid #eeeae2;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        min-width: 0;
+        padding: 12px 14px;
+        border: 1px solid #ded9ce;
+        border-radius: 9px;
+        background: #fff;
+        color: inherit;
+        font: inherit;
+      }
+
+      input[type="text"]:focus-visible,
+      button:focus-visible,
+      input[type="checkbox"]:focus-visible {
+        outline: 3px solid #c8a96a;
+        outline-offset: 2px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 9px;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 650;
+      }
+
+      .add-button {
+        flex: 0 0 auto;
+        padding: 0 18px;
+        background: #2d443b;
+        color: #fffefa;
+      }
+
+      .add-button:hover {
+        background: #20352d;
+      }
+
+      #items {
+        display: grid;
+        gap: 1px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 24px;
+        background: #fffefa;
+      }
+
+      .item + .item {
+        border-top: 1px solid #f0ede6;
+      }
+
+      .item input {
+        width: 18px;
+        height: 18px;
+        margin: 0;
+        accent-color: #2d443b;
+      }
+
+      .item-label {
+        flex: 1;
+        overflow-wrap: anywhere;
+      }
+
+      .item.is-earned .item-label {
+        color: #858178;
+        text-decoration: line-through;
+      }
+
+      .remove-button {
+        padding: 6px 8px;
+        background: transparent;
+        color: #777168;
+        font-size: 0.8125rem;
+      }
+
+      .remove-button:hover {
+        background: #f3f0e9;
+        color: #242423;
+      }
+
+      .empty-state {
+        padding: 32px 24px;
+        color: #777168;
+        text-align: center;
+        line-height: 1.6;
+      }
+
+      .empty-state p {
+        margin: 0;
+      }
+
+      @media (max-width: 480px) {
+        body {
+          padding: 32px 16px;
+        }
+
+        .tracker-header,
+        form,
+        .item {
+          padding-right: 16px;
+          padding-left: 16px;
+        }
+
+        form {
+          gap: 8px;
+        }
+
+        .add-button {
+          padding: 0 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">DWS · Event season celebration</p>
+      <h1>AP Tracker</h1>
+      <p class="intro">Keep a simple list of the items you earn during the event season celebration. Add items as you go and mark them earned when they’re yours.</p>
+
+      <section class="tracker" aria-labelledby="items-heading">
+        <header class="tracker-header">
+          <h2 id="items-heading">Your items</h2>
+          <span id="progress" aria-live="polite">0 earned · 0 total</span>
+        </header>
+        <form id="item-form">
+          <label for="item-name" class="visually-hidden">Item name</label>
+          <input id="item-name" name="item" type="text" placeholder="Add an item to track…" maxlength="120" required>
+          <button class="add-button" type="submit">Add item</button>
+        </form>
+        <ul id="items" aria-label="Tracked items"></ul>
+        <div class="empty-state" id="empty-state">
+          <p>No items yet. Add one above to get started.</p>
+        </div>
+      </section>
+    </main>
+    <style>
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        clip-path: inset(50%);
+      }
+    </style>
+    <script>
+      const storageKey = "dws-ap-tracker-items";
+      const form = document.querySelector("#item-form");
+      const nameInput = document.querySelector("#item-name");
+      const itemsList = document.querySelector("#items");
+      const emptyState = document.querySelector("#empty-state");
+      const progress = document.querySelector("#progress");
+
+      let items = [];
+      try {
+        const savedItems = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        if (Array.isArray(savedItems)) {
+          items = savedItems.filter(
+            (item) =>
+              item &&
+              typeof item.id === "string" &&
+              typeof item.name === "string" &&
+              typeof item.earned === "boolean",
+          );
+        }
+      } catch {
+        items = [];
+      }
+
+      function saveItems() {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(items));
+        } catch {
+          progress.textContent = "Changes won’t be saved in this browser";
+        }
+      }
+
+      function renderItems() {
+        itemsList.replaceChildren();
+        emptyState.hidden = items.length > 0;
+
+        for (const item of items) {
+          const row = document.createElement("li");
+          row.className = `item${item.earned ? " is-earned" : ""}`;
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked = item.earned;
+          checkbox.setAttribute("aria-label", `Mark ${item.name} as earned`);
+          checkbox.addEventListener("change", () => {
+            item.earned = checkbox.checked;
+            saveItems();
+            renderItems();
+          });
+
+          const label = document.createElement("span");
+          label.className = "item-label";
+          label.textContent = item.name;
+
+          const removeButton = document.createElement("button");
+          removeButton.className = "remove-button";
+          removeButton.type = "button";
+          removeButton.textContent = "Remove";
+          removeButton.setAttribute("aria-label", `Remove ${item.name}`);
+          removeButton.addEventListener("click", () => {
+            items = items.filter((entry) => entry.id !== item.id);
+            saveItems();
+            renderItems();
+          });
+
+          row.append(checkbox, label, removeButton);
+          itemsList.append(row);
+        }
+
+        const earnedCount = items.filter((item) => item.earned).length;
+        progress.textContent = `${earnedCount} earned · ${items.length} total`;
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const name = nameInput.value.trim();
+        if (!name) {
+          nameInput.focus();
+          return;
+        }
+
+        items.push({ id: crypto.randomUUID(), name, earned: false });
+        saveItems();
+        renderItems();
+        form.reset();
+        nameInput.focus();
+      });
+
+      renderItems();
+    </script>
+  </body>
+</html>
