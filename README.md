@@ -17,7 +17,7 @@
 ## ⚡ Live Demo
 
 Access the live tracker directly from your mobile browser:
-👉 **`https://<YOUR-GITHUB-USERNAME>.github.io/<YOUR-REPO-NAME>/`**
+👉 **`https://sinanbh.github.io/DWS-AP-Tracker/`**
 
 > 📱 **Pro Tip:** In Chrome or Safari on mobile, tap **Options (⋮)** → **"Add to Home Screen"** or **"Install App"** to launch it as a fullscreen, distraction-free app without URL bars.
 
