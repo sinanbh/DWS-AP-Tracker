@@ -1,339 +1,299 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#f6f3ed">
-    <title>DWS AP Tracker</title>
-    <style>
-      :root {
-        color-scheme: light;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        color: #242423;
-        background: #f6f3ed;
-        font-synthesis: none;
-        text-rendering: optimizeLegibility;
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Event Drop Tracker</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text: #f8fafc;
+      --subtext: #94a3b8;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --green: #22c55e;
+      --red: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background-color: var(--bg); color: var(--text); padding: 16px 12px 60px; min-height: 100vh; }
+
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding: 0 4px; }
+    h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+    .status-badge { font-size: 0.75rem; color: var(--green); background: rgba(34, 197, 94, 0.15); padding: 4px 8px; border-radius: 999px; }
+
+    .list { display: flex; flex-direction: column; gap: 10px; }
+
+    .card {
+      display: flex;
+      align-items: center;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      gap: 10px;
+    }
+
+    /* Centered Icon Box */
+    .icon-wrapper {
+      width: 52px;
+      height: 52px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .icon-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+    }
+
+    .icon-placeholder {
+      font-size: 0.65rem;
+      color: var(--subtext);
+      text-align: center;
+      padding: 2px;
+    }
+
+    .info { flex: 1; min-width: 0; }
+    .name { font-size: 0.9rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Direct-editable total count */
+    .count-input {
+      background: transparent;
+      border: none;
+      border-bottom: 1px dashed #475569;
+      color: #38bdf8;
+      font-size: 1.3rem;
+      font-weight: 800;
+      width: 100%;
+      max-width: 90px;
+      padding: 2px 0;
+      margin-top: 2px;
+    }
+    .count-input:focus {
+      outline: none;
+      border-bottom: 1px solid #38bdf8;
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    /* Stepper: [-] [ editable step ] [+] */
+    .stepper {
+      display: flex;
+      align-items: center;
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .step-btn {
+      width: 40px;
+      height: 42px;
+      border: none;
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .btn-sub { background: #334155; }
+    .btn-sub:active { background: #475569; }
+
+    .btn-add { background: var(--accent); }
+    .btn-add:active { background: var(--accent-hover); }
+
+    .step-val {
+      width: 44px;
+      height: 42px;
+      border: none;
+      background: transparent;
+      color: #f8fafc;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 700;
+      -moz-appearance: textfield;
+    }
+    .step-val::-webkit-inner-spin-button,
+    .step-val::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .step-val:focus {
+      outline: none;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .actions { margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn-action {
+      padding: 12px;
+      font-size: 0.85rem;
+      border-radius: 8px;
+      font-weight: 600;
+      color: #cbd5e1;
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      cursor: pointer;
+    }
+    .btn-reset { color: #f87171; border-color: rgba(239, 68, 68, 0.3); }
+    .file-input { display: none; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Event Drop Tracker</h1>
+    <span class="status-badge">Auto-Saved</span>
+  </header>
+
+  <div class="list" id="tracker-list"></div>
+
+  <div class="actions">
+    <button class="btn-action" onclick="copySummary()">📋 Copy Summary</button>
+    <button class="btn-action btn-reset" onclick="resetAll()">⚠️️ Reset Event</button>
+  </div>
+
+  <input type="file" id="file-picker" class="file-input" accept="image/*">
+
+  <script>
+    const ITEMS = [
+      { id: 'power_core', name: 'Power Core' },
+      { id: 'dx_blueprints', name: 'DX Blueprints' },
+      { id: 'precision_parts', name: 'Precision Parts' },
+      { id: 'weapon_fragments', name: 'Weapon Fragments' },
+      { id: 'titanium_alloys', name: 'Titanium Alloys' },
+      { id: 'hero_shards', name: 'Hero Shards' }
+    ];
+
+    let counts = JSON.parse(localStorage.getItem('loot_counts') || '{}');
+    let icons = JSON.parse(localStorage.getItem('loot_icons') || '{}');
+    let steps = JSON.parse(localStorage.getItem('loot_steps') || '{}');
+    let activeUploadId = null;
+
+    function saveState() {
+      localStorage.setItem('loot_counts', JSON.stringify(counts));
+      localStorage.setItem('loot_icons', JSON.stringify(icons));
+      localStorage.setItem('loot_steps', JSON.stringify(steps));
+    }
+
+    function triggerHaptic() {
+      if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function modify(id, direction) {
+      const stepInput = document.getElementById(`step-${id}`);
+      let stepAmount = parseInt(stepInput.value, 10);
+      if (isNaN(stepAmount) || stepAmount < 1) stepAmount = 1;
+
+      counts[id] = Math.max(0, (counts[id] || 0) + (direction * stepAmount));
+      saveState();
+      triggerHaptic();
+
+      document.getElementById(`count-${id}`).value = counts[id];
+    }
+
+    function setCountDirectly(id, val) {
+      let parsed = parseInt(val, 10);
+      if (isNaN(parsed) || parsed < 0) parsed = 0;
+      counts[id] = parsed;
+      saveState();
+      document.getElementById(`count-${id}`).value = parsed;
+    }
+
+    function updateStep(id, val) {
+      let parsed = parseInt(val, 10);
+      if (isNaN(parsed) || parsed < 1) parsed = 1;
+      steps[id] = parsed;
+      saveState();
+    }
+
+    function promptIconUpload(id) {
+      activeUploadId = id;
+      const fileInput = document.getElementById('file-picker');
+      fileInput.value = '';
+      fileInput.click();
+    }
+
+    document.getElementById('file-picker').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file || !activeUploadId) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        icons[activeUploadId] = event.target.result;
+        saveState();
+        render();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function resetAll() {
+      if (confirm("Reset all counts to 0? Your uploaded icons will remain.")) {
+        ITEMS.forEach(item => counts[item.id] = 0);
+        saveState();
+        render();
       }
+    }
 
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        min-width: 320px;
-        min-height: 100vh;
-        margin: 0;
-        padding: 48px 20px;
-      }
-
-      main {
-        width: min(100%, 720px);
-        margin: 0 auto;
-      }
-
-      .eyebrow {
-        margin: 0 0 12px;
-        color: #786a50;
-        font-size: 0.75rem;
-        font-weight: 700;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-      }
-
-      h1 {
-        margin: 0;
-        font-family: Georgia, "Times New Roman", serif;
-        font-size: clamp(2.5rem, 8vw, 4rem);
-        font-weight: 500;
-        letter-spacing: -0.055em;
-        line-height: 1;
-      }
-
-      .intro {
-        max-width: 540px;
-        margin: 18px 0 32px;
-        color: #66635c;
-        font-size: 1rem;
-        line-height: 1.65;
-      }
-
-      .tracker {
-        overflow: hidden;
-        border: 1px solid #e7e2d8;
-        border-radius: 18px;
-        background: #fffefa;
-        box-shadow: 0 18px 48px rgb(41 35 24 / 7%);
-      }
-
-      .tracker-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 22px 24px;
-        border-bottom: 1px solid #eeeae2;
-      }
-
-      .tracker-header h2 {
-        margin: 0;
-        font-size: 1rem;
-        font-weight: 650;
-      }
-
-      #progress {
-        color: #786a50;
-        font-size: 0.875rem;
-        font-variant-numeric: tabular-nums;
-      }
-
-      form {
-        display: flex;
-        gap: 10px;
-        padding: 20px 24px;
-        border-bottom: 1px solid #eeeae2;
-      }
-
-      input[type="text"] {
-        width: 100%;
-        min-width: 0;
-        padding: 12px 14px;
-        border: 1px solid #ded9ce;
-        border-radius: 9px;
-        background: #fff;
-        color: inherit;
-        font: inherit;
-      }
-
-      input[type="text"]:focus-visible,
-      button:focus-visible,
-      input[type="checkbox"]:focus-visible {
-        outline: 3px solid #c8a96a;
-        outline-offset: 2px;
-      }
-
-      button {
-        border: 0;
-        border-radius: 9px;
-        cursor: pointer;
-        font: inherit;
-        font-weight: 650;
-      }
-
-      .add-button {
-        flex: 0 0 auto;
-        padding: 0 18px;
-        background: #2d443b;
-        color: #fffefa;
-      }
-
-      .add-button:hover {
-        background: #20352d;
-      }
-
-      #items {
-        display: grid;
-        gap: 1px;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-      }
-
-      .item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 16px 24px;
-        background: #fffefa;
-      }
-
-      .item + .item {
-        border-top: 1px solid #f0ede6;
-      }
-
-      .item input {
-        width: 18px;
-        height: 18px;
-        margin: 0;
-        accent-color: #2d443b;
-      }
-
-      .item-label {
-        flex: 1;
-        overflow-wrap: anywhere;
-      }
-
-      .item.is-earned .item-label {
-        color: #858178;
-        text-decoration: line-through;
-      }
-
-      .remove-button {
-        padding: 6px 8px;
-        background: transparent;
-        color: #777168;
-        font-size: 0.8125rem;
-      }
-
-      .remove-button:hover {
-        background: #f3f0e9;
-        color: #242423;
-      }
-
-      .empty-state {
-        padding: 32px 24px;
-        color: #777168;
-        text-align: center;
-        line-height: 1.6;
-      }
-
-      .empty-state p {
-        margin: 0;
-      }
-
-      @media (max-width: 480px) {
-        body {
-          padding: 32px 16px;
-        }
-
-        .tracker-header,
-        form,
-        .item {
-          padding-right: 16px;
-          padding-left: 16px;
-        }
-
-        form {
-          gap: 8px;
-        }
-
-        .add-button {
-          padding: 0 14px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <main>
-      <p class="eyebrow">DWS · Event season celebration</p>
-      <h1>AP Tracker</h1>
-      <p class="intro">Keep a simple list of the items you earn during the event season celebration. Add items as you go and mark them earned when they’re yours.</p>
-
-      <section class="tracker" aria-labelledby="items-heading">
-        <header class="tracker-header">
-          <h2 id="items-heading">Your items</h2>
-          <span id="progress" aria-live="polite">0 earned · 0 total</span>
-        </header>
-        <form id="item-form">
-          <label for="item-name" class="visually-hidden">Item name</label>
-          <input id="item-name" name="item" type="text" placeholder="Add an item to track…" maxlength="120" required>
-          <button class="add-button" type="submit">Add item</button>
-        </form>
-        <ul id="items" aria-label="Tracked items"></ul>
-        <div class="empty-state" id="empty-state">
-          <p>No items yet. Add one above to get started.</p>
-        </div>
-      </section>
-    </main>
-    <style>
-      .visually-hidden {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        clip-path: inset(50%);
-      }
-    </style>
-    <script>
-      const storageKey = "dws-ap-tracker-items";
-      const form = document.querySelector("#item-form");
-      const nameInput = document.querySelector("#item-name");
-      const itemsList = document.querySelector("#items");
-      const emptyState = document.querySelector("#empty-state");
-      const progress = document.querySelector("#progress");
-
-      let items = [];
-      try {
-        const savedItems = JSON.parse(localStorage.getItem(storageKey) || "[]");
-        if (Array.isArray(savedItems)) {
-          items = savedItems.filter(
-            (item) =>
-              item &&
-              typeof item.id === "string" &&
-              typeof item.name === "string" &&
-              typeof item.earned === "boolean",
-          );
-        }
-      } catch {
-        items = [];
-      }
-
-      function saveItems() {
-        try {
-          localStorage.setItem(storageKey, JSON.stringify(items));
-        } catch {
-          progress.textContent = "Changes won’t be saved in this browser";
-        }
-      }
-
-      function renderItems() {
-        itemsList.replaceChildren();
-        emptyState.hidden = items.length > 0;
-
-        for (const item of items) {
-          const row = document.createElement("li");
-          row.className = `item${item.earned ? " is-earned" : ""}`;
-
-          const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
-          checkbox.checked = item.earned;
-          checkbox.setAttribute("aria-label", `Mark ${item.name} as earned`);
-          checkbox.addEventListener("change", () => {
-            item.earned = checkbox.checked;
-            saveItems();
-            renderItems();
-          });
-
-          const label = document.createElement("span");
-          label.className = "item-label";
-          label.textContent = item.name;
-
-          const removeButton = document.createElement("button");
-          removeButton.className = "remove-button";
-          removeButton.type = "button";
-          removeButton.textContent = "Remove";
-          removeButton.setAttribute("aria-label", `Remove ${item.name}`);
-          removeButton.addEventListener("click", () => {
-            items = items.filter((entry) => entry.id !== item.id);
-            saveItems();
-            renderItems();
-          });
-
-          row.append(checkbox, label, removeButton);
-          itemsList.append(row);
-        }
-
-        const earnedCount = items.filter((item) => item.earned).length;
-        progress.textContent = `${earnedCount} earned · ${items.length} total`;
-      }
-
-      form.addEventListener("submit", (event) => {
-        event.preventDefault();
-        const name = nameInput.value.trim();
-        if (!name) {
-          nameInput.focus();
-          return;
-        }
-
-        items.push({ id: crypto.randomUUID(), name, earned: false });
-        saveItems();
-        renderItems();
-        form.reset();
-        nameInput.focus();
+    function copySummary() {
+      const text = ITEMS.map(item => `${item.name}: ${counts[item.id] || 0}`).join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Summary copied to clipboard!\n\n" + text);
       });
+    }
 
-      renderItems();
-    </script>
-  </body>
+    function render() {
+      const list = document.getElementById('tracker-list');
+      list.innerHTML = '';
+
+      ITEMS.forEach(item => {
+        const count = counts[item.id] || 0;
+        const step = steps[item.id] || 1;
+        const iconData = icons[item.id];
+
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        const iconHtml = iconData
+          ? `<img src="${iconData}" alt="${item.name}">`
+          : `<div class="icon-placeholder">Tap to upload</div>`;
+
+        card.innerHTML = `
+          <div class="icon-wrapper" onclick="promptIconUpload('${item.id}')" title="Tap to change icon">
+            ${iconHtml}
+          </div>
+          <div class="info">
+            <div class="name">${item.name}</div>
+            <input type="number" inputmode="numeric" class="count-input" id="count-${item.id}" 
+                   value="${count}" onchange="setCountDirectly('${item.id}', this.value)" title="Tap to edit total">
+          </div>
+          <div class="stepper">
+            <button class="step-btn btn-sub" onclick="modify('${item.id}', -1)">−</button>
+            <input type="number" inputmode="numeric" class="step-val" id="step-${item.id}" 
+                   value="${step}" onchange="updateStep('${item.id}', this.value)" title="Step amount">
+            <button class="step-btn btn-add" onclick="modify('${item.id}', 1)">+</button>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    render();
+  </script>
+</body>
 </html>
