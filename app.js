@@ -17,6 +17,10 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+
+    if (btn.dataset.tab === 'calculators') {
+      renderChipCalculator();
+    }
   });
 });
 
@@ -80,7 +84,7 @@ function moveItem(index, offset) {
   renderTracker();
 }
 
-// ================= HELP MODAL LOGIC =================
+// ================= HELP MODALS =================
 function openHelpModal() {
   document.getElementById('help-modal').style.display = 'flex';
 }
@@ -89,7 +93,14 @@ function closeHelpModal() {
   document.getElementById('help-modal').style.display = 'none';
 }
 
-// Dismiss modal when tapping outside the content box
+function openChipHelpModal() {
+  document.getElementById('chip-help-modal').style.display = 'flex';
+}
+
+function closeChipHelpModal() {
+  document.getElementById('chip-help-modal').style.display = 'none';
+}
+
 function handleModalOverlayClick(event, modalId) {
   if (event.target.id === modalId) {
     document.getElementById(modalId).style.display = 'none';
@@ -97,7 +108,7 @@ function handleModalOverlayClick(event, modalId) {
   }
 }
 
-// ================= ICON PICKER MODAL LOGIC =================
+// ================= ICON PICKER MODAL (TRACKER) =================
 function openIconPicker(id) {
   activeTargetItemId = id;
   const grid = document.getElementById('preset-icons-grid');
@@ -268,8 +279,6 @@ function renderTracker() {
   items.forEach((item, index) => {
     const count = counts[item.id] || 0;
     const step = steps[item.id] || 1;
-    
-    // Priority: custom chosen icon > item defaultIcon > null
     const iconSrc = icons[item.id] || item.defaultIcon || null;
 
     const card = document.createElement('div');
@@ -307,6 +316,101 @@ function renderTracker() {
     `;
     list.appendChild(card);
   });
+}
+
+// ================= ORANGE CHIP CALCULATOR LOGIC =================
+function modifyChipCount(id, delta) {
+  const current = Storage.getChipCounts()[id] || 0;
+  const next = Math.max(0, current + delta);
+  Storage.setChipCount(id, next);
+  triggerHaptic();
+
+  const input = document.getElementById(`chip-input-${id}`);
+  if (input) input.value = next;
+  updateChipCalculations();
+}
+
+function setChipCountDirect(id, val) {
+  const parsed = parseInt(val, 10);
+  Storage.setChipCount(id, isNaN(parsed) || parsed < 0 ? 0 : parsed);
+  updateChipCalculations();
+}
+
+function handleResetChipCalc() {
+  if (!confirm('Reset all material and chest counts to 0?')) return;
+  Storage.resetChipCounts();
+  renderChipCalculator();
+}
+
+function updateChipCalculations() {
+  const chipItems = Storage.getChipItems();
+  const counts = Storage.getChipCounts();
+
+  let totalMaterial = 0;
+  let choiceChips = 0;
+
+  chipItems.forEach(item => {
+    const qty = counts[item.id] || 0;
+    if (item.type === 'direct_chip') {
+      choiceChips += qty;
+    } else {
+      totalMaterial += qty * item.yield;
+    }
+  });
+
+  const craftedChips = Math.floor(totalMaterial / 800);
+  const leftoverMaterial = totalMaterial % 800;
+  const neededForNext = leftoverMaterial === 0 && totalMaterial === 0 ? 800 : (800 - leftoverMaterial) % 800;
+  const grandTotalChips = craftedChips + choiceChips;
+  const progressPct = Math.round((leftoverMaterial / 800) * 100);
+
+  // Update UI Dashboard
+  document.getElementById('chip-grand-total').textContent = grandTotalChips.toLocaleString();
+  document.getElementById('chip-crafted-val').textContent = craftedChips.toLocaleString();
+  document.getElementById('chip-choice-val').textContent = choiceChips.toLocaleString();
+  document.getElementById('chip-total-mat').textContent = totalMaterial.toLocaleString();
+  document.getElementById('chip-next-text').textContent = `Next chip in: ${neededForNext === 0 ? 800 : neededForNext}`;
+  document.getElementById('chip-progress-fill').style.width = `${progressPct}%`;
+}
+
+function renderChipCalculator() {
+  const container = document.getElementById('chip-items-list');
+  const chipItems = Storage.getChipItems();
+  const counts = Storage.getChipCounts();
+
+  container.innerHTML = '';
+
+  chipItems.forEach(item => {
+    const qty = counts[item.id] || 0;
+
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    // Image with clean fallback badge if image hasn't been uploaded yet
+    const iconHtml = `
+      <img src="${item.icon}" alt="${item.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <div class="icon-placeholder" style="display: none; font-size: 1.4rem;">${item.badge}</div>
+    `;
+
+    card.innerHTML = `
+      <div class="icon-wrapper" title="${item.name}">
+        ${iconHtml}
+      </div>
+      <div class="info">
+        <div class="name">${item.name}</div>
+        <div class="yield-tag">${item.desc}</div>
+      </div>
+      <div class="chip-input-wrap">
+        <button class="step-btn btn-sub" onclick="modifyChipCount('${item.id}', -1)">−</button>
+        <input type="number" inputmode="numeric" class="chip-num-input" id="chip-input-${item.id}" 
+               value="${qty}" oninput="setChipCountDirect('${item.id}', this.value)">
+        <button class="step-btn btn-add" onclick="modifyChipCount('${item.id}', 1)">+</button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+
+  updateChipCalculations();
 }
 
 // Initial render calls
