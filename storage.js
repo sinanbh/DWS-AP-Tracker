@@ -1,11 +1,11 @@
 const Storage = (() => {
   const DEFAULT_ITEMS = [
-    { id: 'power_core', name: 'Power Core' },
-    { id: 'dx_blueprints', name: 'DX Blueprints' },
-    { id: 'precision_parts', name: 'Precision Parts' },
-    { id: 'weapon_fragments', name: 'Weapon Fragments' },
-    { id: 'titanium_alloys', name: 'Titanium Alloys' },
-    { id: 'hero_shards', name: 'Hero Shards' }
+    { id: 'power_core', name: 'Power Core', defaultIcon: 'icons/power_core.png' },
+    { id: 'dx_blueprints', name: 'DX Blueprints', defaultIcon: 'icons/dx_blueprints.png' },
+    { id: 'precision_parts', name: 'Precision Parts', defaultIcon: 'icons/precision_parts.png' },
+    { id: 'weapon_fragments', name: 'Weapon Fragments', defaultIcon: 'icons/weapon_fragments.png' },
+    { id: 'titanium_alloys', name: 'Titanium Alloys', defaultIcon: 'icons/titanium_alloys.png' },
+    { id: 'hero_shards', name: 'Hero Shards', defaultIcon: 'icons/hero_shards.png' }
   ];
 
   let items = JSON.parse(localStorage.getItem('loot_items')) || DEFAULT_ITEMS;
@@ -13,6 +13,14 @@ const Storage = (() => {
   let icons = JSON.parse(localStorage.getItem('loot_icons')) || {};
   let steps = JSON.parse(localStorage.getItem('loot_steps')) || {};
   let history = JSON.parse(localStorage.getItem('loot_history')) || [];
+
+  // Backfill defaultIcon paths for existing items already cached in browser
+  items.forEach(item => {
+    const def = DEFAULT_ITEMS.find(d => d.id === item.id);
+    if (def && !item.defaultIcon) {
+      item.defaultIcon = def.defaultIcon;
+    }
+  });
 
   function persist() {
     localStorage.setItem('loot_items', JSON.stringify(items));
@@ -46,7 +54,7 @@ const Storage = (() => {
 
     addItem: (name) => {
       const id = 'drop_' + Date.now();
-      items.push({ id, name });
+      items.push({ id, name, defaultIcon: null });
       counts[id] = 0;
       steps[id] = 1;
       persist();
@@ -91,7 +99,7 @@ const Storage = (() => {
     },
 
     exportJSON: () => {
-      const data = { items, counts, icons, steps, history, version: '1.0' };
+      const data = { items, counts, icons, steps, history, version: '1.1' };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
