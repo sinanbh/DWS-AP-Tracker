@@ -1,5 +1,5 @@
 const Storage = (() => {
-  // All images placed in `icons/items/`. Add more filenames here as you expand!
+  // Preset item drop images in icons/items/
   const PRESET_ICONS = [
     'power_core.png',
     'dx_blueprints.png',
@@ -18,18 +18,26 @@ const Storage = (() => {
     { id: 'hero_shards', name: 'Hero Shards', defaultIcon: 'icons/items/hero_shards.png' }
   ];
 
+  // Definition for Orange Chip Calculator items
+  const CHIP_ITEMS = [
+    { id: 'material', name: 'Advanced Chip Material', yield: 1, type: 'material', icon: 'icons/chips/advanced_chip_material.png', desc: '1 Material each', badge: '🧪' },
+    { id: 'orange_chest', name: 'Orange Chip Chest', yield: 100, type: 'chest', icon: 'icons/chips/orange_chip_chest.png', desc: '100 Materials / chest', badge: '🟧' },
+    { id: 'purple_chest', name: 'Purple Chip Chest', yield: 30, type: 'chest', icon: 'icons/chips/purple_chip_chest.png', desc: '30 Materials / chest', badge: '🟪' },
+    { id: 'blue_chest', name: 'Blue Chip Chest', yield: 5, type: 'chest', icon: 'icons/chips/blue_chip_chest.png', desc: '5 Materials / chest', badge: '🟦' },
+    { id: 'green_chest', name: 'Green Chip Chest', yield: 1, type: 'chest', icon: 'icons/chips/green_chip_chest.png', desc: '1 Material / chest', badge: '🟩' },
+    { id: 'choice_chest', name: 'Orange Chip Choice Chest', yield: 1, type: 'direct_chip', icon: 'icons/chips/orange_chip_choice_chest.png', desc: '1 Orange Chip directly', badge: '🎁' }
+  ];
+
   let items = JSON.parse(localStorage.getItem('loot_items')) || DEFAULT_ITEMS;
   let counts = JSON.parse(localStorage.getItem('loot_counts')) || {};
   let icons = JSON.parse(localStorage.getItem('loot_icons')) || {};
   let steps = JSON.parse(localStorage.getItem('loot_steps')) || {};
   let history = JSON.parse(localStorage.getItem('loot_history')) || [];
+  let chipCounts = JSON.parse(localStorage.getItem('chip_calc_counts')) || {};
 
-  // Update existing stored paths to the new icons/items/ subfolder if needed
   items.forEach(item => {
     const def = DEFAULT_ITEMS.find(d => d.id === item.id);
-    if (def) {
-      item.defaultIcon = def.defaultIcon;
-    }
+    if (def) item.defaultIcon = def.defaultIcon;
   });
 
   function persist() {
@@ -38,6 +46,7 @@ const Storage = (() => {
     localStorage.setItem('loot_icons', JSON.stringify(icons));
     localStorage.setItem('loot_steps', JSON.stringify(steps));
     localStorage.setItem('loot_history', JSON.stringify(history));
+    localStorage.setItem('chip_calc_counts', JSON.stringify(chipCounts));
   }
 
   return {
@@ -48,6 +57,7 @@ const Storage = (() => {
     getHistory: () => history,
     getPresetIcons: () => PRESET_ICONS,
 
+    // Tracker Count & Setup
     setCount: (id, val) => {
       counts[id] = Math.max(0, val);
       persist();
@@ -115,7 +125,7 @@ const Storage = (() => {
     },
 
     exportJSON: () => {
-      const data = { items, counts, icons, steps, history, version: '1.2' };
+      const data = { items, counts, icons, steps, history, version: '1.3' };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
@@ -130,6 +140,18 @@ const Storage = (() => {
       if (parsed.icons) icons = parsed.icons;
       if (parsed.steps) steps = parsed.steps;
       if (parsed.history) history = parsed.history;
+      persist();
+    },
+
+    // Chip Calculator Accessors
+    getChipItems: () => CHIP_ITEMS,
+    getChipCounts: () => chipCounts,
+    setChipCount: (id, val) => {
+      chipCounts[id] = Math.max(0, val);
+      persist();
+    },
+    resetChipCounts: () => {
+      chipCounts = {};
       persist();
     }
   };
