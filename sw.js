@@ -1,4 +1,4 @@
-const CACHE_NAME = 'event-tracker-v2';
+const CACHE_NAME = 'event-tracker-v3';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -8,18 +8,17 @@ const CORE_ASSETS = [
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  './icons/power_core.png',
-  './icons/dx_blueprints.png',
-  './icons/precision_parts.png',
-  './icons/weapon_fragments.png',
-  './icons/titanium_alloys.png',
-  './icons/hero_shards.png'
+  './icons/items/power_core.png',
+  './icons/items/dx_blueprints.png',
+  './icons/items/precision_parts.png',
+  './icons/items/weapon_fragments.png',
+  './icons/items/titanium_alloys.png',
+  './icons/items/hero_shards.png'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // Prevents 404s on unuploaded images from breaking PWA installation
       return Promise.all(
         CORE_ASSETS.map((url) =>
           cache.add(url).catch((err) => console.log('Asset skipped during pre-cache:', url))
