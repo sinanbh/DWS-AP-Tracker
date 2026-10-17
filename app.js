@@ -183,10 +183,21 @@ document.getElementById('backup-file-input').addEventListener('change', function
   reader.readAsText(file);
 });
 
+// Summary: only copy items where count > 0
 function copySummary() {
   const items = Storage.getItems();
   const counts = Storage.getCounts();
-  const text = items.map(item => `${item.name}: ${counts[item.id] || 0}`).join('\n');
+
+  const activeLines = items
+    .filter(item => (counts[item.id] || 0) > 0)
+    .map(item => `${item.name}: ${counts[item.id]}`);
+
+  if (activeLines.length === 0) {
+    alert("No drops recorded yet (all counts are 0). Nothing to copy!");
+    return;
+  }
+
+  const text = activeLines.join('\n');
   navigator.clipboard.writeText(text).then(() => {
     alert("Summary copied to clipboard!\n\n" + text);
   });
@@ -205,13 +216,17 @@ function renderTracker() {
   items.forEach((item, index) => {
     const count = counts[item.id] || 0;
     const step = steps[item.id] || 1;
-    const iconData = icons[item.id];
+    
+    // Priority: user-uploaded icon > default GitHub repo path > null
+    const iconSrc = icons[item.id] || item.defaultIcon || null;
 
     const card = document.createElement('div');
     card.className = `card ${isEditMode ? 'editing' : ''}`;
 
-    const iconHtml = iconData
-      ? `<img src="${iconData}" alt="${item.name}">`
+    // Gracefully shows placeholder if image path fails to load or 404s
+    const iconHtml = iconSrc
+      ? `<img src="${iconSrc}" alt="${item.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+         <div class="icon-placeholder" style="display: none;">Upload icon</div>`
       : `<div class="icon-placeholder">Upload icon</div>`;
 
     const rightControls = isEditMode
@@ -228,7 +243,7 @@ function renderTracker() {
          </div>`;
 
     card.innerHTML = `
-      <div class="icon-wrapper" onclick="promptIconUpload('${item.id}')" title="Tap to upload image">
+      <div class="icon-wrapper" onclick="promptIconUpload('${item.id}')" title="Tap to replace icon">
         ${iconHtml}
       </div>
       <div class="info">
