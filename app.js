@@ -80,6 +80,23 @@ function moveItem(index, offset) {
   renderTracker();
 }
 
+// ================= HELP MODAL LOGIC =================
+function openHelpModal() {
+  document.getElementById('help-modal').style.display = 'flex';
+}
+
+function closeHelpModal() {
+  document.getElementById('help-modal').style.display = 'none';
+}
+
+// Dismiss modal when tapping outside the content box
+function handleModalOverlayClick(event, modalId) {
+  if (event.target.id === modalId) {
+    document.getElementById(modalId).style.display = 'none';
+    if (modalId === 'icon-modal') activeTargetItemId = null;
+  }
+}
+
 // ================= ICON PICKER MODAL LOGIC =================
 function openIconPicker(id) {
   activeTargetItemId = id;
