@@ -19,7 +19,7 @@
   <!-- Top Tab Navigation -->
   <nav class="nav-bar">
     <button class="nav-btn active" data-tab="tracker">🎯 Tracker</button>
-    <button class="nav-btn" data-tab="calculators">🧮 Calculators</button>
+    <button class="nav-btn" data-tab="calculators">⚡ Chip Calc</button>
   </nav>
 
   <main class="content-container">
@@ -69,25 +69,53 @@
       </section>
     </section>
 
-    <!-- ================= TAB 2: CALCULATORS ================= -->
+    <!-- ================= TAB 2: ORANGE CHIP CALCULATOR ================= -->
     <section id="tab-calculators" class="tab-pane">
       <header class="section-header">
-        <div>
-          <h1>Calculators</h1>
-          <span class="subtext-small">Event & progression tools</span>
+        <div class="header-title-wrap">
+          <h1>Orange Chip Calc</h1>
+          <button class="btn-help" onclick="openChipHelpModal()" title="Calculation Rules">?</button>
         </div>
+        <button class="btn-danger-outline" onclick="handleResetChipCalc()">Reset</button>
       </header>
 
-      <div class="placeholder-card">
-        <div class="placeholder-icon">🛠️</div>
-        <h3>Calculators Coming Soon</h3>
-        <p>This tab is pre-wired and ready for your point converters, power core costs, or formation formulas.</p>
+      <!-- Summary Dashboard Banner -->
+      <div class="chip-dashboard">
+        <div class="chip-total-highlight">
+          <span class="chip-stat-label">Total Orange Chips</span>
+          <div class="chip-grand-total" id="chip-grand-total">0</div>
+        </div>
+
+        <div class="chip-breakdown-grid">
+          <div class="chip-sub-card">
+            <span class="sub-label">Crafted from Material</span>
+            <span class="sub-value" id="chip-crafted-val">0</span>
+          </div>
+          <div class="chip-sub-card">
+            <span class="sub-label">From Choice Chests</span>
+            <span class="sub-value" id="chip-choice-val">0</span>
+          </div>
+        </div>
+
+        <!-- Material Progress toward Next Chip -->
+        <div class="chip-material-meter">
+          <div class="meter-info">
+            <span>Total Material: <strong id="chip-total-mat">0</strong></span>
+            <span id="chip-next-text" class="meter-next">Next chip in: 800</span>
+          </div>
+          <div class="progress-track">
+            <div id="chip-progress-fill" class="progress-fill" style="width: 0%;"></div>
+          </div>
+        </div>
       </div>
+
+      <!-- Material & Chest Inventory Inputs -->
+      <div class="list" id="chip-items-list"></div>
     </section>
 
   </main>
 
-  <!-- ================= HELP & GUIDE MODAL ================= -->
+  <!-- ================= TRACKER HELP MODAL ================= -->
   <div id="help-modal" class="modal-overlay" style="display: none;" onclick="handleModalOverlayClick(event, 'help-modal')">
     <div class="modal-content help-modal-content">
       <div class="modal-header">
@@ -96,16 +124,15 @@
       </div>
       
       <div class="help-scroll-body">
-        
         <div class="help-card">
           <div class="help-card-header">
             <span class="help-icon">🎯</span>
             <h4>Tallying & Steppers</h4>
           </div>
           <ul class="help-list">
-            <li><strong>[+] / [-] Buttons:</strong> Tap to increment or decrement the count by the step value.</li>
-            <li><strong>Step Box (Middle):</strong> Tap the number between <code>-</code> and <code>+</code> to change how much you increment per click (e.g. <code>1</code>, <code>10</code>, <code>100</code>).</li>
-            <li><strong>Direct Keyboard Edit:</strong> Tap directly on any large blue total count to type in an exact amount.</li>
+            <li><strong>[+] / [-] Buttons:</strong> Increment or decrement count by step value.</li>
+            <li><strong>Step Box (Middle):</strong> Change step size (e.g. 1, 10, 100).</li>
+            <li><strong>Direct Keyboard Edit:</strong> Tap on any count number to type directly.</li>
           </ul>
         </div>
 
@@ -115,10 +142,7 @@
             <h4>Item Icons</h4>
           </div>
           <ul class="help-list">
-            <li><strong>Tap Any Icon:</strong> Opens the icon selector.</li>
-            <li><strong>Preset Icons:</strong> Choose from images stored in your repo's <code>icons/items/</code> folder.</li>
-            <li><strong>Device Upload:</strong> Tap <em>Upload from Device</em> to load screenshot art directly from your gallery.</li>
-            <li><strong>Reset:</strong> Restores default artwork if needed.</li>
+            <li><strong>Tap Any Icon:</strong> Open icon selector to pick presets or upload screenshots.</li>
           </ul>
         </div>
 
@@ -128,33 +152,82 @@
             <h4>Managing Your List</h4>
           </div>
           <ul class="help-list">
-            <li><strong>Edit List:</strong> Tap <em>Edit List</em> in the header to reveal reorder and delete controls.</li>
-            <li><strong>Reorder (▲ / ▼):</strong> Move higher-priority drops to the top of your screen.</li>
-            <li><strong>Delete (✕):</strong> Removes an unneeded drop from your tracker.</li>
-            <li><strong>+ Add:</strong> Type a drop name in the dashed box to create a brand-new tracking item.</li>
+            <li><strong>Edit List:</strong> Reorder priority (▲ / ▼), remove drops, or add new custom drops.</li>
           </ul>
         </div>
 
         <div class="help-card">
           <div class="help-card-header">
             <span class="help-icon">💾</span>
-            <h4>Archive, Backup & Sharing</h4>
+            <h4>Archive & Backup</h4>
           </div>
           <ul class="help-list">
-            <li><strong>📦 Save & Reset Event:</strong> Snapshots all current counts into the <em>Past Events History</em> section with a Month/Year label and resets active counts to <code>0</code> for the next event.</li>
-            <li><strong>📋 Copy Summary:</strong> Copies all items with a count greater than 0 to your clipboard, formatted for game chat or Discord.</li>
-            <li><strong>💾 Backup JSON:</strong> Downloads a backup file with your items, counts, icons, and history.</li>
-            <li><strong>📥 Import Backup:</strong> Restores your backup file on any browser or phone without losing data.</li>
+            <li><strong>Save & Reset Event:</strong> Snapshots counts into History and resets current event to 0.</li>
+            <li><strong>Copy Summary:</strong> Copies drops with count &gt; 0 to clipboard.</li>
+            <li><strong>Backup / Import:</strong> Download JSON or restore across devices.</li>
           </ul>
         </div>
-
       </div>
 
       <button class="btn-modal-action" style="margin-top: 14px;" onclick="closeHelpModal()">Got It</button>
     </div>
   </div>
 
-  <!-- ================= ICON PICKER MODAL ================= -->
+  <!-- ================= CHIP CALCULATOR HELP MODAL ================= -->
+  <div id="chip-help-modal" class="modal-overlay" style="display: none;" onclick="handleModalOverlayClick(event, 'chip-help-modal')">
+    <div class="modal-content help-modal-content">
+      <div class="modal-header">
+        <h3>⚡ Orange Chip Guide</h3>
+        <button class="btn-close" onclick="closeChipHelpModal()">✕</button>
+      </div>
+      
+      <div class="help-scroll-body">
+        <div class="help-card">
+          <div class="help-card-header">
+            <span class="help-icon">🔨</span>
+            <h4>Crafting Cost</h4>
+          </div>
+          <p class="help-text">Crafting <strong>1 Orange Chip</strong> requires <strong>800 Advanced Chip Materials</strong> in the Chip Factory.</p>
+        </div>
+
+        <div class="help-card">
+          <div class="help-card-header">
+            <span class="help-icon">📦</span>
+            <h4>Chest Material Yields</h4>
+          </div>
+          <ul class="help-list">
+            <li>🟧 <strong>Orange Chip Chest:</strong> 100 Materials</li>
+            <li>🟪 <strong>Purple Chip Chest:</strong> 30 Materials</li>
+            <li>🟦 <strong>Blue Chip Chest:</strong> 5 Materials</li>
+            <li>🟩 <strong>Green Chip Chest:</strong> 1 Material</li>
+            <li>🧪 <strong>Advanced Chip Material:</strong> 1 Material each</li>
+          </ul>
+        </div>
+
+        <div class="help-card">
+          <div class="help-card-header">
+            <span class="help-icon">🎁</span>
+            <h4>Direct Choice Chests</h4>
+          </div>
+          <p class="help-text"><strong>Orange Chip Choice Chest</strong> grants <strong>1 full Orange Chip directly</strong> without requiring any crafting materials.</p>
+        </div>
+
+        <div class="help-card">
+          <div class="help-card-header">
+            <span class="help-icon">🧮</span>
+            <h4>Total Calculation Formula</h4>
+          </div>
+          <p class="help-text">
+            <code>Total Chips = Math.floor(Total Materials / 800) + Choice Chests</code>
+          </p>
+        </div>
+      </div>
+
+      <button class="btn-modal-action" style="margin-top: 14px;" onclick="closeChipHelpModal()">Got It</button>
+    </div>
+  </div>
+
+  <!-- ================= TRACKER ICON PICKER MODAL ================= -->
   <div id="icon-modal" class="modal-overlay" style="display: none;" onclick="handleModalOverlayClick(event, 'icon-modal')">
     <div class="modal-content">
       <div class="modal-header">
