@@ -27,9 +27,10 @@
     <!-- ================= TAB 1: TRACKER & HISTORY ================= -->
     <section id="tab-tracker" class="tab-pane active">
       <header class="section-header">
-        <div>
+        <div class="header-title-wrap">
           <h1>Active Drops</h1>
           <span class="status-badge">Auto-Saved</span>
+          <button class="btn-help" onclick="openHelpModal()" title="Help & Guide">?</button>
         </div>
         <button id="toggle-edit-btn" class="btn-secondary" onclick="toggleEditMode()">Edit List</button>
       </header>
@@ -86,8 +87,75 @@
 
   </main>
 
+  <!-- ================= HELP & GUIDE MODAL ================= -->
+  <div id="help-modal" class="modal-overlay" style="display: none;" onclick="handleModalOverlayClick(event, 'help-modal')">
+    <div class="modal-content help-modal-content">
+      <div class="modal-header">
+        <h3>📖 Tracker Guide</h3>
+        <button class="btn-close" onclick="closeHelpModal()">✕</button>
+      </div>
+      
+      <div class="help-scroll-body">
+        
+        <div class="help-card">
+          <div class="help-card-header">
+            <span class="help-icon">🎯</span>
+            <h4>Tallying & Steppers</h4>
+          </div>
+          <ul class="help-list">
+            <li><strong>[+] / [-] Buttons:</strong> Tap to increment or decrement the count by the step value.</li>
+            <li><strong>Step Box (Middle):</strong> Tap the number between <code>-</code> and <code>+</code> to change how much you increment per click (e.g. <code>1</code>, <code>10</code>, <code>100</code>).</li>
+            <li><strong>Direct Keyboard Edit:</strong> Tap directly on any large blue total count to type in an exact amount.</li>
+          </ul>
+        </div>
+
+        <div class="help-card">
+          <div class="help-card-header">
+            <span class="help-icon">🖼️</span>
+            <h4>Item Icons</h4>
+          </div>
+          <ul class="help-list">
+            <li><strong>Tap Any Icon:</strong> Opens the icon selector.</li>
+            <li><strong>Preset Icons:</strong> Choose from images stored in your repo's <code>icons/items/</code> folder.</li>
+            <li><strong>Device Upload:</strong> Tap <em>Upload from Device</em> to load screenshot art directly from your gallery.</li>
+            <li><strong>Reset:</strong> Restores default artwork if needed.</li>
+          </ul>
+        </div>
+
+        <div class="help-card">
+          <div class="help-card-header">
+            <span class="help-icon">⚙️</span>
+            <h4>Managing Your List</h4>
+          </div>
+          <ul class="help-list">
+            <li><strong>Edit List:</strong> Tap <em>Edit List</em> in the header to reveal reorder and delete controls.</li>
+            <li><strong>Reorder (▲ / ▼):</strong> Move higher-priority drops to the top of your screen.</li>
+            <li><strong>Delete (✕):</strong> Removes an unneeded drop from your tracker.</li>
+            <li><strong>+ Add:</strong> Type a drop name in the dashed box to create a brand-new tracking item.</li>
+          </ul>
+        </div>
+
+        <div class="help-card">
+          <div class="help-card-header">
+            <span class="help-icon">💾</span>
+            <h4>Archive, Backup & Sharing</h4>
+          </div>
+          <ul class="help-list">
+            <li><strong>📦 Save & Reset Event:</strong> Snapshots all current counts into the <em>Past Events History</em> section with a Month/Year label and resets active counts to <code>0</code> for the next event.</li>
+            <li><strong>📋 Copy Summary:</strong> Copies all items with a count greater than 0 to your clipboard, formatted for game chat or Discord.</li>
+            <li><strong>💾 Backup JSON:</strong> Downloads a backup file with your items, counts, icons, and history.</li>
+            <li><strong>📥 Import Backup:</strong> Restores your backup file on any browser or phone without losing data.</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <button class="btn-modal-action" style="margin-top: 14px;" onclick="closeHelpModal()">Got It</button>
+    </div>
+  </div>
+
   <!-- ================= ICON PICKER MODAL ================= -->
-  <div id="icon-modal" class="modal-overlay" style="display: none;">
+  <div id="icon-modal" class="modal-overlay" style="display: none;" onclick="handleModalOverlayClick(event, 'icon-modal')">
     <div class="modal-content">
       <div class="modal-header">
         <h3>Choose Icon</h3>
