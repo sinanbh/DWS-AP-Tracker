@@ -1,11 +1,21 @@
 const Storage = (() => {
+  // All images placed in `icons/items/`. Add more filenames here as you expand!
+  const PRESET_ICONS = [
+    'power_core.png',
+    'dx_blueprints.png',
+    'precision_parts.png',
+    'weapon_fragments.png',
+    'titanium_alloys.png',
+    'hero_shards.png'
+  ];
+
   const DEFAULT_ITEMS = [
-    { id: 'power_core', name: 'Power Core', defaultIcon: 'icons/power_core.png' },
-    { id: 'dx_blueprints', name: 'DX Blueprints', defaultIcon: 'icons/dx_blueprints.png' },
-    { id: 'precision_parts', name: 'Precision Parts', defaultIcon: 'icons/precision_parts.png' },
-    { id: 'weapon_fragments', name: 'Weapon Fragments', defaultIcon: 'icons/weapon_fragments.png' },
-    { id: 'titanium_alloys', name: 'Titanium Alloys', defaultIcon: 'icons/titanium_alloys.png' },
-    { id: 'hero_shards', name: 'Hero Shards', defaultIcon: 'icons/hero_shards.png' }
+    { id: 'power_core', name: 'Power Core', defaultIcon: 'icons/items/power_core.png' },
+    { id: 'dx_blueprints', name: 'DX Blueprints', defaultIcon: 'icons/items/dx_blueprints.png' },
+    { id: 'precision_parts', name: 'Precision Parts', defaultIcon: 'icons/items/precision_parts.png' },
+    { id: 'weapon_fragments', name: 'Weapon Fragments', defaultIcon: 'icons/items/weapon_fragments.png' },
+    { id: 'titanium_alloys', name: 'Titanium Alloys', defaultIcon: 'icons/items/titanium_alloys.png' },
+    { id: 'hero_shards', name: 'Hero Shards', defaultIcon: 'icons/items/hero_shards.png' }
   ];
 
   let items = JSON.parse(localStorage.getItem('loot_items')) || DEFAULT_ITEMS;
@@ -14,10 +24,10 @@ const Storage = (() => {
   let steps = JSON.parse(localStorage.getItem('loot_steps')) || {};
   let history = JSON.parse(localStorage.getItem('loot_history')) || [];
 
-  // Backfill defaultIcon paths for existing items already cached in browser
+  // Update existing stored paths to the new icons/items/ subfolder if needed
   items.forEach(item => {
     const def = DEFAULT_ITEMS.find(d => d.id === item.id);
-    if (def && !item.defaultIcon) {
+    if (def) {
       item.defaultIcon = def.defaultIcon;
     }
   });
@@ -36,6 +46,7 @@ const Storage = (() => {
     getIcons: () => icons,
     getSteps: () => steps,
     getHistory: () => history,
+    getPresetIcons: () => PRESET_ICONS,
 
     setCount: (id, val) => {
       counts[id] = Math.max(0, val);
@@ -47,8 +58,13 @@ const Storage = (() => {
       persist();
     },
 
-    setIcon: (id, base64) => {
-      icons[id] = base64;
+    setIcon: (id, iconPathOrBase64) => {
+      icons[id] = iconPathOrBase64;
+      persist();
+    },
+
+    resetIcon: (id) => {
+      delete icons[id];
       persist();
     },
 
@@ -99,7 +115,7 @@ const Storage = (() => {
     },
 
     exportJSON: () => {
-      const data = { items, counts, icons, steps, history, version: '1.1' };
+      const data = { items, counts, icons, steps, history, version: '1.2' };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
