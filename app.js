@@ -9,7 +9,7 @@ if ('serviceWorker' in navigator) {
 
 // ================= UI STATE & TABS =================
 let isEditMode = false;
-let activeUploadId = null;
+let activeTargetItemId = null;
 
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -80,9 +80,37 @@ function moveItem(index, offset) {
   renderTracker();
 }
 
-// Icon Picking
-function promptIconUpload(id) {
-  activeUploadId = id;
+// ================= ICON PICKER MODAL LOGIC =================
+function openIconPicker(id) {
+  activeTargetItemId = id;
+  const grid = document.getElementById('preset-icons-grid');
+  const presets = Storage.getPresetIcons();
+
+  grid.innerHTML = presets.map(filename => {
+    const fullPath = `icons/items/${filename}`;
+    return `
+      <div class="preset-icon-tile" onclick="choosePresetIcon('${fullPath}')" title="${filename}">
+        <img src="${fullPath}" alt="${filename}">
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('icon-modal').style.display = 'flex';
+}
+
+function closeIconModal() {
+  document.getElementById('icon-modal').style.display = 'none';
+  activeTargetItemId = null;
+}
+
+function choosePresetIcon(path) {
+  if (!activeTargetItemId) return;
+  Storage.setIcon(activeTargetItemId, path);
+  closeIconModal();
+  renderTracker();
+}
+
+function triggerDeviceUpload() {
   const picker = document.getElementById('icon-file-input');
   picker.value = '';
   picker.click();
@@ -90,15 +118,23 @@ function promptIconUpload(id) {
 
 document.getElementById('icon-file-input').addEventListener('change', function(e) {
   const file = e.target.files[0];
-  if (!file || !activeUploadId) return;
+  if (!file || !activeTargetItemId) return;
 
   const reader = new FileReader();
   reader.onload = function(evt) {
-    Storage.setIcon(activeUploadId, evt.target.result);
+    Storage.setIcon(activeTargetItemId, evt.target.result);
+    closeIconModal();
     renderTracker();
   };
   reader.readAsDataURL(file);
 });
+
+function resetToDefaultIcon() {
+  if (!activeTargetItemId) return;
+  Storage.resetIcon(activeTargetItemId);
+  closeIconModal();
+  renderTracker();
+}
 
 // ================= HISTORY UI =================
 function handleArchiveEvent() {
@@ -183,7 +219,6 @@ document.getElementById('backup-file-input').addEventListener('change', function
   reader.readAsText(file);
 });
 
-// Summary: only copy items where count > 0
 function copySummary() {
   const items = Storage.getItems();
   const counts = Storage.getCounts();
@@ -217,17 +252,16 @@ function renderTracker() {
     const count = counts[item.id] || 0;
     const step = steps[item.id] || 1;
     
-    // Priority: user-uploaded icon > default GitHub repo path > null
+    // Priority: custom chosen icon > item defaultIcon > null
     const iconSrc = icons[item.id] || item.defaultIcon || null;
 
     const card = document.createElement('div');
     card.className = `card ${isEditMode ? 'editing' : ''}`;
 
-    // Gracefully shows placeholder if image path fails to load or 404s
     const iconHtml = iconSrc
       ? `<img src="${iconSrc}" alt="${item.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-         <div class="icon-placeholder" style="display: none;">Upload icon</div>`
-      : `<div class="icon-placeholder">Upload icon</div>`;
+         <div class="icon-placeholder" style="display: none;">Pick icon</div>`
+      : `<div class="icon-placeholder">Pick icon</div>`;
 
     const rightControls = isEditMode
       ? `<div class="edit-controls">
@@ -243,7 +277,7 @@ function renderTracker() {
          </div>`;
 
     card.innerHTML = `
-      <div class="icon-wrapper" onclick="promptIconUpload('${item.id}')" title="Tap to replace icon">
+      <div class="icon-wrapper" onclick="openIconPicker('${item.id}')" title="Tap to pick or upload icon">
         ${iconHtml}
       </div>
       <div class="info">
