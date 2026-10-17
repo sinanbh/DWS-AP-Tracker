@@ -6,7 +6,8 @@ const Storage = (() => {
     'precision_parts.png',
     'weapon_fragments.png',
     'titanium_alloys.png',
-    'hero_shards.png'
+    'hero_shards.png',
+    'purple_chip_chest.png'
   ];
 
   const DEFAULT_ITEMS = [
