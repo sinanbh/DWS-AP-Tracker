@@ -1,8 +1,10 @@
 {
+  "id": "/DWS-AP-Tracker/",
+  "scope": "/DWS-AP-Tracker/",
+  "start_url": "/DWS-AP-Tracker/index.html",
   "name": "Event Drop Tracker",
   "short_name": "DropTracker",
   "description": "Offline event drop and loot counter",
-  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0b1120",
   "theme_color": "#0b1120",
