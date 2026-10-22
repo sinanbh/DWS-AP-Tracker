@@ -1,4 +1,4 @@
-const CACHE_NAME = 'event-tracker-v5';
+const CACHE_NAME = 'event-tracker-v6';
 
 const CORE_ASSETS = [
   './',
